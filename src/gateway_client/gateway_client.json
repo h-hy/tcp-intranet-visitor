@@ -1,0 +1,13 @@
+{
+	"LocalIP"                  : "127.0.0.1:19000",
+	"TransportProtocols"       : "tcp",
+	"Listen"                   : "0.0.0.0:19000",
+	"LogFile"                  : "msg_server.log",
+	"ScanDeadSessionTimeout"   : 10,
+	"Expire"                   : 10,
+	"UUID"                     : "nvjian",
+	"GatewayServerList"      : [
+		"127.0.0.1:19200"
+	]
+}
+	

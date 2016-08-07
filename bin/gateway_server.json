@@ -1,0 +1,18 @@
+{
+    "LocalIP": "127.0.0.1:19200",
+    "TransportProtocols": "tcp",
+    "Listen": "0.0.0.0:19200",
+    "LogFile": "msg_server.log",
+    "ScanDeadSessionTimeout": 120,
+    "Expire": 100,
+    "TransferList": [
+        {
+            "RemoteAddr": "www.szu.edu.cn",
+            "RemotePort": "80",
+            "LocalAddr": "127.0.0.1",
+            "LocalPort": "8001",
+            "Client_UUID": "nvjian",
+            "IsHttp": true
+        }
+    ]
+}
