@@ -1,0 +1,42 @@
+package main
+
+import (
+	"flag"
+	"fmt"
+	"io/ioutil"
+	"os"
+	"os/exec"
+	"strings"
+
+	iconv "github.com/djimenez/iconv-go"
+)
+
+func main11() {
+	command := flag.String("cmd", "ipconfig", "Set the command.")
+	args := flag.String("args", "", "Set the args. (separated by spaces)")
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Usage: %s [-cmd <command>] [-args <the arguments (separated by spaces)>]\n", os.Args[0])
+		flag.PrintDefaults()
+	}
+	flag.Parse()
+	fmt.Println("Command: ", *command)
+	fmt.Println("Arguments: ", *args)
+	var argArray []string
+	if *args != "" {
+		argArray = strings.Split(*args, " ")
+	} else {
+		argArray = make([]string, 0)
+	}
+	cmd := exec.Command(*command, argArray...)
+	input, err := cmd.Output()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "The command failed to perform: %s (Command: %s, Arguments: %s)", err, *command, *args)
+		return
+	}
+
+	out := make([]byte, len(input))
+	out = out[:]
+	iconv.Convert(input, out, "gb2312", "utf-8")
+	ioutil.WriteFile("out.html", out, 0644)
+	fmt.Fprintf(os.Stdout, "Result: %s", out)
+}

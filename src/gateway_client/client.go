@@ -112,6 +112,7 @@ func (self *GatewayClient) handleGatewayServerClient(msc *libnet.Session) error 
 	err := msc.Process(func(msg *libnet.InBuffer) error {
 		var c protocol.CmdSimple
 		ms := msc.Conn().RemoteAddr().String()
+		log.Info(self.gatewayServerClientMap)
 		if self.gatewayServerClientMap[ms] == nil {
 			log.Error(ms + " not exist")
 			return errors.New(ms + " not exist")
