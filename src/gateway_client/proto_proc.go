@@ -17,6 +17,7 @@ package main
 
 import (
 	"flag"
+	"io"
 	"net"
 	//	"regexp"
 	//	"strconv"
@@ -70,7 +71,7 @@ func (self *ProtoProc) procMakeRequest(cmd protocol.Cmd, session *libnet.Session
 
 	connLan, err := connectRemote(remoteIp, remotePort)
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
 		return err
 	}
 
@@ -93,38 +94,31 @@ func (self *ProtoProc) procMakeRequest(cmd protocol.Cmd, session *libnet.Session
 		log.Error(err.Error())
 		return err
 	}
-	go func(connWan net.Conn) {
-		for {
-			received := make([]byte, 20480)
-			i, err := connWan.Read(received)
-			if err != nil {
-				log.Info(index + "链接：访问者关闭链接，准备关闭受访者链接")
-				connLan.Close()
-				break
-			} else {
-				log.Info(index + "：收到访问者数据")
-				connLan.Write(received[0:i])
-			}
-		}
-	}(gateWayClient.Conn())
+	ExitChan := make(chan bool, 1)
+	go func(connWan, connLan net.Conn, Exit chan bool) {
+		io.Copy(connLan, connWan)
+		log.Info(index + "链接：访问者关闭链接")
+		ExitChan <- true
+	}(gateWayClient.Conn(), connLan, ExitChan)
 
-	go func(connLan net.Conn) {
+	go func(connWan, connLan net.Conn, Exit chan bool) {
 		for {
 			received := make([]byte, 204800)
 			i, err := connLan.Read(received)
-
 			if err != nil {
-				log.Info(index + "链接：受访者关闭链接，准备关闭访问者链接")
-				gateWayClient.Close()
+				log.Info(index + "链接：受访者关闭链接")
+				ExitChan <- true
 				break
 			} else {
-				log.Info(index + "链接：收到受访者数据")
-				//				log.Info(index+"链接：收到受访者数据", string(received[0:i]))
 				gateWayClient.Send(libnet.Bytes(received[0:i]))
 			}
 		}
-	}(connLan)
-
+	}(gateWayClient.Conn(), connLan, ExitChan)
+	go func(connWan, connLan net.Conn, Exit chan bool) {
+		<-ExitChan
+		connLan.Close()
+		connWan.Close()
+	}(gateWayClient.Conn(), connLan, ExitChan)
 	return nil
 }
 func connectGatewayServer(ms string) (*libnet.Session, error) {
